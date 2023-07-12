@@ -3,12 +3,10 @@ import numpy as np
 from evaluate import Evaluator
 
 model = None
-
 test_samples = []
 
 def image_reader(img_path):
-
-
+    
     return None
 
 

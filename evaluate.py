@@ -1,17 +1,11 @@
-from lib.datasets.dataset_catalog import DatasetCatalog
 from lib.config import cfg
-import pycocotools.coco as coco
 import numpy as np
-from lib.utils.pvnet import pvnet_pose_utils, pvnet_data_utils
 import os
-from lib.utils.linemod import linemod_config
 import torch
-if cfg.test.icp:
-    from lib.utils import icp_utils
 from PIL import Image
-from lib.utils.img_utils import read_depth
 from scipy import spatial
 import math
+import cv2
 
 def isRotationMatrix(R) :
     Rt = np.transpose(R)
@@ -43,29 +37,59 @@ def rotationMatrixToEulerAngles(R) :
     # return np.array([x, y, z])
     return np.rad2deg([x, y, z])
 
+def pnp(points_3d, points_2d, camera_matrix, method=cv2.SOLVEPNP_ITERATIVE):
+    try:
+        dist_coeffs = pnp.dist_coeffs
+    except:
+        dist_coeffs = np.zeros(shape=[8, 1], dtype='float64')
+
+    assert points_3d.shape[0] == points_2d.shape[0], 'points 3D and points 2D must have same number of vertices'
+    if method == cv2.SOLVEPNP_EPNP:
+        points_3d = np.expand_dims(points_3d, 0)
+        points_2d = np.expand_dims(points_2d, 0)
+
+    points_2d = np.ascontiguousarray(points_2d.astype(np.float64))
+    points_3d = np.ascontiguousarray(points_3d.astype(np.float64))
+    camera_matrix = camera_matrix.astype(np.float64)
+    _, R_exp, t = cv2.solvePnP(points_3d,
+                               points_2d,
+                               camera_matrix,
+                               dist_coeffs,
+                               flags=method)
+    # , None, None, False, cv2.SOLVEPNP_UPNP)
+
+    # R_exp, t, _ = cv2.solvePnPRansac(points_3D,
+    #                            points_2D,
+    #                            cameraMatrix,
+    #                            distCoeffs,
+    #                            reprojectionError=12.0)
+
+    R, _ = cv2.Rodrigues(R_exp)
+    # trans_3d=np.matmul(points_3d,R.transpose())+t.transpose()
+    # if np.max(trans_3d[:,2]<0):
+    #     R=-R
+    #     t=-t
+
+    return np.concatenate([R, t], axis=-1)
+
+
+def project(xyz, K, RT):
+    """
+    xyz: [N, 3]
+    K: [3, 3]
+    RT: [3, 4]
+    """
+    xyz = np.dot(xyz, RT[:, :3].T) + RT[:, 3:].T
+    xyz = np.dot(xyz, K.T)
+    xy = xyz[:, :2] / xyz[:, 2:]
+    return xy
+
 
 class Evaluator:
 
     def __init__(self, result_dir):
         self.result_dir = result_dir
-        args = DatasetCatalog.get(cfg.test.dataset)
-        self.ann_file = args['ann_file']
-        # self.ann_file = 'data/custom_PG/all.json'
-        # self.ann_file = 'data/custom_LND/all.json'
-        # self.ann_file ='data/custom_PG/all_test.json'
-        print("!!!evalutor ann file", self.ann_file)
-        self.coco = coco.COCO(self.ann_file)
-
-        data_root = args['data_root']
-        # model_path = 'data/custom/model.ply'
-        # self.model = pvnet_data_utils.get_ply_model(model_path)
-        # model_path = 'data/custom/convert_Tube45mm_53mm.npy'
-        # model_path = 'data/custom_LND/LND_cut_notip.npy'
-        model_path = 'data/custom_PG/PG_cut_notip.npy'
-        self.model = np.load(model_path)
-        # self.diameter = np.loadtxt('data/custom/diameter.txt').item()
         self.diameter = np.array([54])
-        self.icp_render = icp_utils.SynRenderer(cfg.cls_type) if cfg.test.icp else None
 
         self.proj2d = []
         self.add = []
@@ -95,8 +119,8 @@ class Evaluator:
         self.rot_error.append(rot_error)
 
     def projection_2d(self, pose_pred, pose_targets, K, threshold=5):
-        model_2d_pred = pvnet_pose_utils.project(self.model, K, pose_pred)
-        model_2d_targets = pvnet_pose_utils.project(self.model, K, pose_targets)
+        model_2d_pred = project(self.model, K, pose_pred)
+        model_2d_targets = project(self.model, K, pose_targets)
         proj_mean_diff = np.mean(np.linalg.norm(model_2d_pred - model_2d_targets, axis=-1))
 
         self.proj2d.append(proj_mean_diff < threshold)
@@ -119,15 +143,10 @@ class Evaluator:
         adds_error, _ = adds_error_index.query(model_targets, k=1)
         adds_error = np.mean(adds_error)
 
-
-        if icp:
-            self.icp_add.append(mean_dist < diameter)
-        else:
-            self.add_dist.append(add_error)
-            self.add.append(add_error < diameter)
-            self.adds_dist.append(adds_error)
-            self.adds.append(adds_error < diameter)
-
+        self.add_dist.append(add_error)
+        self.add.append(add_error < diameter)
+        self.adds_dist.append(adds_error)
+        self.adds.append(adds_error < diameter)
 
     def cm_degree_5_metric(self, pose_pred, pose_targets):
         translation_distance = np.linalg.norm(pose_pred[:, 3] - pose_targets[:, 3])
@@ -151,34 +170,7 @@ class Evaluator:
         iou = (mask_pred & mask_gt).sum() / (mask_pred | mask_gt).sum()
         self.mask_ap.append(iou > 0.7)
 
-    def icp_refine(self, pose_pred, anno, output, K):
-        depth = read_depth(anno['depth_path'])
-        mask = torch.argmax(output['seg'], dim=1)[0].detach().cpu().numpy()
-        if pose_pred[2, 3] <= 0 or np.sum(mask) < 20:
-            return pose_pred
-        depth[mask != 1] = 0
-        pose_pred_tmp = pose_pred.copy()
-        pose_pred_tmp[:3, 3] = pose_pred_tmp[:3, 3] * 1000
-        R_refined, t_refined = icp_utils.icp_refinement(depth, self.icp_render, pose_pred_tmp[:3, :3], pose_pred_tmp[:3, 3], K.copy(), (depth.shape[1], depth.shape[0]), depth_only=True,            max_mean_dist_factor=5.0)
-        R_refined, _ = icp_utils.icp_refinement(depth, self.icp_render, R_refined, t_refined, K.copy(), (depth.shape[1], depth.shape[0]), no_depth=True)
-        pose_pred = np.hstack((R_refined, t_refined.reshape((3, 1)) / 1000))
-        return pose_pred
-
-    def evaluate(self, output, batch):
-        kpt_2d = output['kpt_2d'][0].detach().cpu().numpy()
-
-        img_id = int(batch['img_id'][0])
-        # print("anns, img_id",img_id)
-        # print(self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id)))
-        anno = self.coco.loadAnns(self.coco.getAnnIds(imgIds=img_id))[0]
-        kpt_3d = np.concatenate([anno['fps_3d'], [anno['center_3d']]], axis=0)
-        K = np.array(anno['K'])
-
-        pose_gt = np.array(anno['pose'])
-        pose_pred = pvnet_pose_utils.pnp(kpt_3d, kpt_2d, K)
-        if self.icp_render is not None:
-            pose_pred_icp = self.icp_refine(pose_pred.copy(), anno, output, K)
-            self.add_metric(pose_pred_icp, pose_gt, icp=True)
+    def evaluate(self, pose_gt, pose_pred):
         self.projection_2d(pose_pred, pose_gt, K)
         if cfg.cls_type in ['eggbox', 'glue','shaft']:
             self.add_metric(pose_pred, pose_gt, syn=True)
@@ -186,22 +178,7 @@ class Evaluator:
             self.add_metric(pose_pred, pose_gt)
         self.cm_degree_5_metric(pose_pred, pose_gt)
         self.trans_rot_error(pose_pred, pose_gt)
-        self.mask_iou(output, batch)
-    
-    def save(self,save_path):
-        proj2d = np.array(self.proj2d)
-        add = np.array(self.add)
-        add_dist = np.array(self.add_dist)
-        cmd5 = np.array(self.cmd5)
-        ap = np.array(self.mask_ap)
-        trans_error = np.array(self.trans_error)
-        rot_error = np.array(self.rot_error)
-        adds_dist = np.array(self.adds_dist)
-        np.save(save_path+'/trans_error.npy',trans_error)
-        np.save(save_path+'/rot_error.npy',rot_error)
-        np.save(save_path+'/add_dist.npy',add_dist)
-        np.save(save_path+'/adds_dist.npy',adds_dist)
-        print('record saved!')
+        # self.mask_iou(output, batch)
 
     def summarize(self,save_path=None):
         proj2d = np.mean(self.proj2d)
