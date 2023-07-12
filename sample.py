@@ -6,14 +6,18 @@ model = None
 test_samples = []
 
 def image_reader(img_path):
-    
-    return None
+    ### TODO
+    img = None
+    return img
 
 
 evaluator = Evaluator()
 
+###test
+###test
 
 for test_sample in test_samples:
+
     image_path, pose_path = test_sample
 
     image = image_reader(image_path)
