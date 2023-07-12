@@ -84,11 +84,26 @@ def project(xyz, K, RT):
     xy = xyz[:, :2] / xyz[:, 2:]
     return xy
 
+def get_model_diameter(model):
+    min_x, max_x = np.min(model[:, 0]), np.max(model[:, 0])
+    min_y, max_y = np.min(model[:, 1]), np.max(model[:, 1])
+    min_z, max_z = np.min(model[:, 2]), np.max(model[:, 2])
+
+    dx = max_x-min_x
+    dy = max_y-min_y
+    dz = max_z-min_z
+
+    diameter = np.sqrt(dx**2 + dy**2 + dz**2)
+
+    return diameter
+
 
 class Evaluator:
 
     def __init__(self, result_dir):
         self.result_dir = result_dir
+        self.model_3d = None
+        self.diameter = get_model_diameter(self.model_3d)
         self.diameter = np.array([54])
 
         self.proj2d = []
