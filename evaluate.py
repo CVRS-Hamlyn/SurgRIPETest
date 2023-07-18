@@ -2,7 +2,7 @@ from lib.config import cfg
 import numpy as np
 import os
 import torch
-from PIL import Image
+# from PIL import Image
 from scipy import spatial
 import math
 import cv2
@@ -85,6 +85,9 @@ def project(xyz, K, RT):
     return xy
 
 def get_model_diameter(model):
+    '''
+    Get the diameter of 3d model from .npy/.stl files 
+    '''
     min_x, max_x = np.min(model[:, 0]), np.max(model[:, 0])
     min_y, max_y = np.min(model[:, 1]), np.max(model[:, 1])
     min_z, max_z = np.min(model[:, 2]), np.max(model[:, 2])
@@ -97,14 +100,17 @@ def get_model_diameter(model):
 
     return diameter
 
+def model_diameter(instument_type):
+    model_diameter = {'LND':16.242301839504098,'MBF':19.853339564602752}
+    return model_diameter[instument_type]
+
 
 class Evaluator:
 
-    def __init__(self, result_dir):
-        self.result_dir = result_dir
+    def __init__(self, instument_type):
+        # self.result_dir = result_dir
         self.model_3d = None
-        self.diameter = get_model_diameter(self.model_3d)
-        self.diameter = np.array([54])
+        self.diameter = model_diameter(instument_type)
 
         self.proj2d = []
         self.add = []
