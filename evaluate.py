@@ -1,8 +1,5 @@
-from lib.config import cfg
 import numpy as np
 import os
-import torch
-# from PIL import Image
 from scipy import spatial
 import math
 import cv2
@@ -116,7 +113,6 @@ class Evaluator:
         self.add = []
         self.icp_add = []
         self.cmd5 = []
-        self.mask_ap = []
         self.add_dist = []
         self.trans_error = []
         self.rot_error = []
@@ -169,14 +165,6 @@ class Evaluator:
         self.adds_dist.append(adds_error)
         self.adds.append(adds_error < diameter)
 
-    def cm_degree_5_metric(self, pose_pred, pose_targets):
-        translation_distance = np.linalg.norm(pose_pred[:, 3] - pose_targets[:, 3])
-        rotation_diff = np.dot(pose_pred[:, :3], pose_targets[:, :3].T)
-        trace = np.trace(rotation_diff)
-        trace = trace if trace <= 3 else 3
-        angular_distance = np.rad2deg(np.arccos((trace - 1.) / 2.))
-        self.cmd5.append(translation_distance < 5 and angular_distance < 5)
-
     def mm_degree_5_metric(self, pose_pred, pose_targets):
         translation_distance = np.linalg.norm(pose_pred[:, 3] - pose_targets[:, 3])
         rotation_diff = np.dot(pose_pred[:, :3], pose_targets[:, :3].T)
@@ -185,21 +173,11 @@ class Evaluator:
         angular_distance = np.rad2deg(np.arccos((trace - 1.) / 2.))
         self.cmd5.append(translation_distance < 5 and angular_distance < 5)
 
-    def mask_iou(self, output, batch):
-        mask_pred = torch.argmax(output['seg'], dim=1)[0].detach().cpu().numpy()
-        mask_gt = batch['mask'][0].detach().cpu().numpy()
-        iou = (mask_pred & mask_gt).sum() / (mask_pred | mask_gt).sum()
-        self.mask_ap.append(iou > 0.7)
-
     def evaluate(self, pose_gt, pose_pred):
         self.projection_2d(pose_pred, pose_gt, K)
-        if cfg.cls_type in ['eggbox', 'glue','shaft']:
-            self.add_metric(pose_pred, pose_gt, syn=True)
-        else:
-            self.add_metric(pose_pred, pose_gt)
-        self.cm_degree_5_metric(pose_pred, pose_gt)
+        self.add_metric(pose_pred, pose_gt)
+        self.mm_degree_5_metric(pose_pred, pose_gt)
         self.trans_rot_error(pose_pred, pose_gt)
-        # self.mask_iou(output, batch)
 
     def summarize(self,save_path=None):
         proj2d = np.mean(self.proj2d)
@@ -208,7 +186,6 @@ class Evaluator:
         adds = np.mean(self.adds)
         adds_dist = np.mean(self.adds_dist)
         cmd5 = np.mean(self.cmd5)
-        ap = np.mean(self.mask_ap)
         trans_error = np.mean(self.trans_error)
         rot_error = np.mean(self.rot_error)
         print('2d projections metric: {}'.format(proj2d))
@@ -216,15 +193,13 @@ class Evaluator:
         print('ADD mean distance', add_dist)
         print('ADD-S metric: {}'.format(adds))
         print('ADD-S mean distance', adds_dist)
-        print('5 cm 5 degree metric: {}'.format(cmd5))
-        print('mask ap70: {}'.format(ap))
+        print('5 mm 5 degree metric: {}'.format(cmd5))
         print('trans_error: {}'.format(trans_error))
         print('rot_error: {}'.format(rot_error))
         
         self.proj2d = []
         self.add = []
         self.cmd5 = []
-        self.mask_ap = []
         self.icp_add = []
         self.trans_error = []
         self.rot_error = []
