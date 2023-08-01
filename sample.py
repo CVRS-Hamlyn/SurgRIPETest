@@ -13,7 +13,7 @@ def get_data_samples(root_path):
     image_paths = natsorted(os.listdir(os.path.join(root_path,'image')))
     pose_paths = natsorted(os.listdir(os.path.join(root_path,'pose')))
     image_paths = [os.path.join(root_path,'image',img_path) for img_path in image_paths]
-    pose_paths = [os.path.join(root_path,'image',pose_path) for pose_path in pose_paths]
+    pose_paths = [os.path.join(root_path,'pose',pose_path) for pose_path in pose_paths]
     # mask_path = os.path.join(root_path,'mask')    #in case of someone use the masks
 
     return list(zip(image_paths, pose_paths))
