@@ -3,6 +3,7 @@ import numpy as np
 from evaluate import Evaluator
 import os
 from natsort import natsorted
+
 def image_reader(img_path):
     ### TODO
     img = None
