@@ -18,17 +18,24 @@ def get_data_samples(root_path):
 
     return list(zip(image_paths, pose_paths))
 
+def fake_pose(gt_pose):
+    pose = gt_pose.copy()
+    pose[:,:3][:3]=pose[:,:3][:3]+ np.random.random_sample((3, 3))/1000
+    pose[:,-1][:3] =pose[:,-1][:3]+np.random.random_sample((3,))/10
+
+    return pose
 
 instrument_types = ['LND','MBF']
 instrument_type = instrument_types[0]
 
 model = None
 root_path = None    #the root path for dataset e.g. .../LND/TRAIN
+root_path = '/media/deeplearner/PortableSSD/micc_challenge/LND/TRAIN'
 test_samples = get_data_samples(root_path)
 
-evaluator = Evaluator(root_path,instrument_type)
+evaluator = Evaluator(root_path, instrument_type)
 
-for test_sample in test_samples:
+for test_sample in test_samples[:10]:
 
     image_path, pose_path = test_sample
 
@@ -36,7 +43,9 @@ for test_sample in test_samples:
     
     pose_gt = np.load(pose_path)
 
-    pose_pred = model(image)
+    pose_pred = fake_pose(pose_gt)
+
+    # pose_pred = model(image)
 
     evaluator.evaluate(pose_gt, pose_pred)
 

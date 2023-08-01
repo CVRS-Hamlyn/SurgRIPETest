@@ -97,17 +97,29 @@ def get_model_diameter(model):
 
     return diameter
 
-def model_diameter(instument_type):
+def model_diameter(instrument_type):
     model_diameter = {'LND':16.242301839504098,'MBF':19.853339564602752}
-    return model_diameter[instument_type]
+    return model_diameter[instrument_type]
+
+def get_camparams(instrument_type):
+    cam_params = {
+        'LND':[ 818.0454, 0, 476.3116,
+            0., 815.9985 , 298.1767,
+            0., 0., 1. ],
+    'MBF':[ 817.2734, 0 ,408.2818,
+            0., 816.8086, 288.1883,
+            0., 0., 1. ]}
+    return np.array(cam_params[instrument_type]).reshape(3,3)
 
 
 class Evaluator:
 
-    def __init__(self, instument_type):
+    def __init__(self, root_path, instrument_type):
         # self.result_dir = result_dir
-        self.model_3d = None
-        self.diameter = model_diameter(instument_type)
+        self.model_path = os.path.join(root_path,'joint.npy')
+        self.model = np.load(self.model_path)
+        self.diameter = model_diameter(instrument_type)
+        self.K = get_camparams(instrument_type)
 
         self.proj2d = []
         self.add = []
@@ -174,7 +186,7 @@ class Evaluator:
         self.cmd5.append(translation_distance < 5 and angular_distance < 5)
 
     def evaluate(self, pose_gt, pose_pred):
-        self.projection_2d(pose_pred, pose_gt, K)
+        self.projection_2d(pose_pred, pose_gt, self.K)
         self.add_metric(pose_pred, pose_gt)
         self.mm_degree_5_metric(pose_pred, pose_gt)
         self.trans_rot_error(pose_pred, pose_gt)
