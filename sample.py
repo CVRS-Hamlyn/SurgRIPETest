@@ -3,6 +3,7 @@ import numpy as np
 from evaluate import Evaluator
 import os
 from natsort import natsorted
+import argparse
 
 def image_reader(img_path):
     ### TODO
@@ -18,27 +19,39 @@ def get_data_samples(root_path):
 
     return list(zip(image_paths, pose_paths))
 
+TASK_CHOICES = {'l': 'LND', 'm': 'MBF'}
 
-instrument_types = ['LND','MBF']
-instrument_type = instrument_types[0]
+def get_args():
+    parser = argparse.ArgumentParser(description='Evaluateion script for SurgRIPE.')
+    parser.add_argument('--path', help= 'Get path to data root path.')
+    parser.add_argument('--type', choices=TASK_CHOICES.keys(), default='l', help= 'Instrument Type for test.')
+    return parser.parse_args()
 
-model = None
-root_path = None    #the root path for dataset e.g. .../LND/TRAIN
-test_samples = get_data_samples(root_path)
+def main():
+    args = get_args()
+    instrument_type = TASK_CHOICES.get(args.type)
 
-evaluator = Evaluator(root_path,instrument_type)
+    model = None
+    root_path = args.path    #the root path for dataset e.g. .../LND/TRAIN
+    test_samples = get_data_samples(root_path)
 
-for test_sample in test_samples:
+    evaluator = Evaluator(root_path,instrument_type)
 
-    image_path, pose_path = test_sample
+    for test_sample in test_samples:
 
-    image = image_reader(image_path)
-    
-    pose_gt = np.load(pose_path)
+        image_path, pose_path = test_sample
 
-    pose_pred = model(image)
+        image = image_reader(image_path)
+        
+        pose_gt = np.load(pose_path)
 
-    evaluator.evaluate(pose_gt, pose_pred)
+        pose_pred = model(image)
 
-evaluator.summarize()
+        evaluator.evaluate(pose_gt, pose_pred)
+
+    evaluator.summarize()
+
+
+if __name__ == "__main__":
+    main()
 
