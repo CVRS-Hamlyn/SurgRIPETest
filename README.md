@@ -2,13 +2,15 @@
 
 ![pose](assets/pose_1.png)
 
-This is the official repository for the SurgRIPE competition. The challenge is hosted [on Synapse](https://www.synapse.org/#!Synapse:syn51471789/wiki/622255). Please click the link for more details.
+This is the official repository for the MICCAI 2023 SurgRIPE competition. The challenge is hosted [on Synapse](https://www.synapse.org/#!Synapse:syn51471789/wiki/622255).
 
-The challange is 6 degrees of freedom tool pose estimation with and without occulusion.
+The challange - 6 DOF pose estimation for surgical tools, with and without occulusion.
 
 ## Docker Template
 
-We have provided an example of a docker image to run this code. Feel free to add to the docker file to add any packages of your choosing. Just make sure it runs using the evaluation script!
+We have provided an example of a docker file to run this code.  
+
+The docker file can be customised for your setup - PROVIDED it runs using the evaluation script! 
 
 (example, below should change to the docker template)
 ```yaml
@@ -37,10 +39,10 @@ RUN python sample.py --path [path] --task [task]
 docker run ...
 ```
 
-For docker help, please see there [documentation](https://docs.docker.com) for more.
+For docker help - [documentation](https://docs.docker.com).
 
 ## sample.py
-sample is the tempate of how to run the evaluation script. To use the evaluation script, model and image_reader() need be customized.
+sample.py is the tempate of how to run the evaluation script. To use the evaluation script, please modify the following: model (line #34) and image_reader() (line #8).
 
 ```python
 def image_reader(img_path):
@@ -51,8 +53,8 @@ def image_reader(img_path):
 model = None
 ```
 
-The model input is the RGB image and the ideal output should be a [4 X 3] matrix consist of the rotation matrix(R)[3 X 3] and translation matrix(T)[3]
-The pose format should be the same as the GT pose as shown in visualization.py.
+The model input is an RGB image and the required output should be a [4 X 3] matrix consisting of a rotation matrix(R)[3 X 3] and a translation matrix(T)[3]
+The pose format should be the same as the GT pose, as shown in visualization.py.
 
 ### Usage
 
@@ -65,7 +67,7 @@ Type                The type of task l (LND) | m (MBF)
 ```
 
 ## evaluate.py
-evaluate.py includes all the evaluateion metrics, including ADD, Translation/Rotation Error, 2d projections, 5 mm 5-degree metric, etc.
+evaluate.py includes all the evaluateion metrics, including: ADD, Translation/Rotation Error, 2d projections, 5 mm 5-degree metric, etc.
 
 ## visualization.py
-visualization.py includes the visualisation methods. It provides some sample code about how to read image and annotation, how to decompose the 6DoF pose, how to show axis of pose, etc.
+visualization.py includes the visualisation methods. Providing sample code for: how to read an image and annotation, how to decompose the 6DoF pose, how to show axis of pose, etc.
