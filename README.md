@@ -51,7 +51,7 @@ def image_reader(img_path):
 model = None
 ```
 
-The model input is the RGB image and the ideal output should be a [4*3] matrix consist of the rotation matrix(R)[3*3] and translation matrix(T)[3]
+The model input is the RGB image and the ideal output should be a [4 X 3] matrix consist of the rotation matrix(R)[3 X 3] and translation matrix(T)[3]
 The pose format should be the same as the GT pose as shown in visualization.py.
 
 ### Usage
