@@ -1,5 +1,7 @@
 # SurgRIPETest
 
+![pose](assets/pose_1.png)
+
 This is the official repository for the SurgRIPE competition. The challenge is hosted [on Synapse](https://www.synapse.org/#!Synapse:syn51471789/wiki/622255). Please click the link for more details.
 
 The challange is 6 degrees of freedom tool pose estimation with and without occulusion.
