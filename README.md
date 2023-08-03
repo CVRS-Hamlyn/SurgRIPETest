@@ -42,7 +42,7 @@ docker run ...
 For docker help - [documentation](https://docs.docker.com).
 
 ## sample.py
-sample.py is the tempate of how to run the evaluation script. To use the evaluation script, please modify the following: model (line #34) and image_reader() (line #8).
+sample.py contains the template of how to run the evaluation script. Before running, please modify the following in evaluate.py: model [line #34] and image_reader() [line #8].
 
 ```python
 def image_reader(img_path):
