@@ -6,7 +6,7 @@ The challange is 6 degrees of freedom tool pose estimation with and without occu
 
 ## Docker Template
 
-We have provided an example of a docker image to run this code.
+We have provided an example of a docker image to run this code. Feel free to add to the docker file to add any packages of your choosing. Just make sure it runs using the evaluation script!
 
 (example, below should change to the docker template)
 ```yaml
