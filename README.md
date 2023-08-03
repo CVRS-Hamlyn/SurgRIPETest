@@ -6,11 +6,12 @@ This is the official repository for the MICCAI 2023 SurgRIPE competition. The ch
 
 The challange - 6 DOF pose estimation for surgical tools, with and without occulusion.
 
+A docker image is required for submission to this challenge. Participants are expected to: (1) create a docker image; (2) download the SurgeRIPETest GitHub repository; (3) modify the model initislisation and the dataloading in sample.py.
+
+
 ## Docker Template
 
-We have provided an example of a docker file to run this code.  
-
-The docker file can be customised for your setup - PROVIDED it runs using the evaluation script! 
+Below is a template docker file that can be used. The docker file can be customised for your setup - PROVIDED it is setup to run the evaluation script! 
 
 (example, below should change to the docker template)
 ```yaml
