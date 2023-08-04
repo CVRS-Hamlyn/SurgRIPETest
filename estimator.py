@@ -10,15 +10,16 @@ class Estimator:
 
         self.model = self.model_load()
     
-    def preprocess(self,img_path):
+    def image_reader(self,img_path):
         '''
         TODO
+        read image and preprocessing
         '''
         img = None
 
         return img
     
-    def model_load(self,):
+    def model_load(self):
         '''
         TODO
         ''' 
@@ -29,7 +30,7 @@ class Estimator:
     
     def predict(self, img_path):
 
-        img = self.preprocess(img_path)
+        img = self.image_reader(img_path)
 
         '''
         TODO
