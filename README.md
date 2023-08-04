@@ -11,7 +11,7 @@ A docker image is required for submission to this challenge. Participants are ex
 
 ## Docker
 
-For participants of SurgRIPE, a Docker Image is required for submission. Please visit [Docker Template]([https://github.com/guyw04/SurgRIPE_docker) for more information.
+For participants of SurgRIPE, a Docker Image is required for submission. Please visit [Docker Template](https://github.com/guyw04/SurgRIPE_docker) for more information.
 
 For general docker help - [documentation](https://docs.docker.com).
 
