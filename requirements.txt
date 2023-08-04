@@ -1,6 +1,5 @@
-numpy==1.25.2
-scipy==1.11.1
-opencv-python==4.8.0.74
-torch==2.0.1
-natsort==8.4.0
-PyYaml==6.0.1
+numpy
+scipy
+opencv-python
+natsort
+PyYaml
