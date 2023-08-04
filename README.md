@@ -11,15 +11,9 @@ A docker image is required for submission to this challenge. Participants are ex
 
 ## Docker
 
-For participants of SurgRIPE, a Docker Image is required for submission. Please visit [Docker Template]([[https://github.com/guyw04/SurgRIPE_docker]) for more information.
+For participants of SurgRIPE, a Docker Image is required for submission. Please visit [Docker Template]([https://github.com/guyw04/SurgRIPE_docker) for more information.
 
-### Example
-
-```bash
-docker run ...
-```
-
-For docker help - [documentation](https://docs.docker.com).
+For general docker help - [documentation](https://docs.docker.com).
 
 ## sample.py
 sample.py contains the template of how to run the evaluation script. Before running, please modify the following in evaluate.py: model [line #34] and image_reader() [line #8].
