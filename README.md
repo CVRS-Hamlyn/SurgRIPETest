@@ -9,30 +9,9 @@ The challange - 6 DOF pose estimation for surgical tools, with and without occul
 A docker image is required for submission to this challenge. Participants are expected to: (1) create a docker image; (2) download the SurgeRIPETest GitHub repository; (3) modify the model initislisation and the dataloading in sample.py.
 
 
-## Docker Template
+## Docker
 
-Below is a template docker file that can be used. The docker file can be customised for your setup - PROVIDED it is setup to run the evaluation script! 
-
-(example, below should change to the docker template)
-```yaml
-FROM anibali/pytorch:2.0.0-cuda11.8-ubuntu22.04
-
-# Set up time zone.
-ENV TZ=UTC
-RUN sudo ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
-
-# Install system libraries required by OpenCV.
-RUN sudo apt-get update \
- && sudo apt-get install -y libgl1-mesa-glx libgtk2.0-0 libsm6 libxext6 \
- && sudo rm -rf /var/lib/apt/lists/*
-
-# Install requirements.
-RUN pip install -r requirements.txt
-
-# run file
-RUN python sample.py --path [path] --task [task]
-
-```
+For participants of SurgRIPE, a Docker Image is required for submission. Please visit [Docker Template]([[https://github.com/guyw04/SurgRIPE_docker]) for more information.
 
 ### Example
 
