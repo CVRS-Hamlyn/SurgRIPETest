@@ -4,11 +4,8 @@ from evaluate import Evaluator
 import os
 from natsort import natsorted
 import argparse
+from estimator import Estimator
 
-def image_reader(img_path):
-    ### TODO
-    img = None
-    return img
 
 def get_data_samples(root_path):
     image_paths = natsorted(os.listdir(os.path.join(root_path,'image')))
@@ -31,7 +28,7 @@ def main():
     args = get_args()
     instrument_type = TASK_CHOICES.get(args.type)
 
-    model = None
+    estimator = Estimator()
     root_path = args.path    #the root path for dataset e.g. .../LND/TRAIN
     test_samples = get_data_samples(root_path)
 
@@ -40,12 +37,10 @@ def main():
     for test_sample in test_samples:
 
         image_path, pose_path = test_sample
-
-        image = image_reader(image_path)
         
         pose_gt = np.load(pose_path)
 
-        pose_pred = model(image)
+        pose_pred = estimator.predict(image_path)
 
         evaluator.evaluate(pose_gt, pose_pred)
 
