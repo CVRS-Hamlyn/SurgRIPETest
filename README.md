@@ -16,16 +16,16 @@ For participants of the MICCAI 2023 SurgRIPE challenge, a Docker Image is requir
 For general docker help - [documentation](https://docs.docker.com).
 
 ## estimator.py
-estimator.py contains the template of how to load your customized model and image preprocessing method. To run the estimator, please modify the following two functions model_load() [line #22] and image_reader() [line #13].
+estimator.py contains the template of how to load your customized model and image preprocessing method. To run the estimator, please modify the following two functions **model_load()** [line #22] and **image_reader()** [line #13].
 
-model_load() aims to load the model structure and weights.
-image_reader() aims to read and process image given a image path.
+**model_load()** aims to load the model structure and weights.
+
+**image_reader()** aims to read and process image given a image path.
 
 ## run.py
 run.py contains the template of how to run the evaluation script. 
 
-The model input is an RGB image and the required output should be a [4 X 3] matrix consisting of a rotation matrix(R)[3 X 3] and a translation matrix(T)[3]
-The pose format should be the same as the GT pose, as shown in visualization.py.
+The model input is an RGB image and the required output should be a **4 X 3** matrix consisting of a rotation matrix(**R**) **3 X 3** and a translation matrix(**T**) **1 X 3**. The pose format should be the same as the GT pose, as shown in visualization.py.
 
 ### Usage
 
