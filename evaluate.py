@@ -34,6 +34,23 @@ def rotationMatrixToEulerAngles(R) :
     # return np.array([x, y, z])
     return np.rad2deg([x, y, z])
 
+def re(R_est, R_gt):
+    """Rotational Error.
+
+    :param R_est: 3x3 ndarray with the estimated rotation matrix.
+    :param R_gt: 3x3 ndarray with the ground-truth rotation matrix.
+    :return: The calculated error.
+    """
+    assert R_est.shape == R_gt.shape == (3, 3)
+    rotation_diff = np.dot(R_est, R_gt.T)
+    trace = np.trace(rotation_diff)
+    trace = trace if trace <= 3 else 3
+    # Avoid invalid values due to numerical errors
+    error_cos = min(1.0, max(-1.0, 0.5 * (trace - 1.0)))
+    rd_deg = np.rad2deg(np.arccos(error_cos))
+
+    return rd_deg
+
 def pnp(points_3d, points_2d, camera_matrix, method=cv2.SOLVEPNP_ITERATIVE):
     try:
         dist_coeffs = pnp.dist_coeffs
@@ -137,13 +154,9 @@ class Evaluator:
         gt_pose_trans = pose_targets[:3,-1]
         pred_pose_rot = pose_pred[:3,:3]
         pred_pose_trans = pose_pred[:3,-1]
-        try:
-            b_rot_angle = rotationMatrixToEulerAngles(gt_pose_rot)
-            reproject_b_rot_angle = rotationMatrixToEulerAngles(pred_pose_rot)
-        except:
-            print("rotation is not orthogonal")
+        
         trans_error = np.linalg.norm(gt_pose_trans-pred_pose_trans)
-        rot_error = np.absolute(b_rot_angle-reproject_b_rot_angle)
+        rot_error = re(pred_pose_rot,gt_pose_rot)
         self.trans_error.append(trans_error)
         self.rot_error.append(rot_error)
 
