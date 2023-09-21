@@ -57,24 +57,26 @@ def show_axis(im, rvecs, tvecs, cam_matrix, dist_coeff, length, is_show=False):
     return im
 
 
-def show_blend_mask(im1, im2):
-    # im2 = cv2.cvtColor(im2,cv2.COLOR_GRAY2RGB)
-    dst = cv2.addWeighted(im1, 1, im2, 0.2, 0)
+def show_blend_mask(im1, im2, alpha=0.5):
+    if len(im2.shape)<3:
+        im2 = cv2.cvtColor(im2,cv2.COLOR_GRAY2RGB)
+    dst = cv2.addWeighted(im1, 1, im2, alpha, 0)
 
     return dst
 
 
-def vis(data_path,config,camera_matrix,dist_coefs,img_format='.png',set_x0=False):
+def vis(data_path,config,camera_matrix,dist_coefs,project_3d=False,img_format='.png'):
     pts_3d = np.load(data_path+config['3d_model'])
 
     imgs_path = data_path+'image/'
-
     img_paths = os.listdir(imgs_path)
 
     img_idxs = []
     for img_path in img_paths:
         img_idx = img_path[:-4]
         img_idxs.append(int(img_idx))
+    if not os.path.exists(data_path+'mask_rgb/'):
+        os.makedirs(data_path+'mask_rgb/')
 
     for img_idx in img_idxs:
 
@@ -82,19 +84,23 @@ def vis(data_path,config,camera_matrix,dist_coefs,img_format='.png',set_x0=False
         dist_coefs = None
         im = cv2.imread(img_path)
 
-        mask_path = data_path+'mask/{}{}'.format(img_idx,img_format)
-        mask = cv2.imread(mask_path)
-
         pose_path = data_path+'pose/{}.npy'.format(img_idx)
         pose = np.load(pose_path)
-
 
         r = pose[:,:3][:3]
         t = pose[:,-1][:3]
 
+        ### only for demonstration
+        if project_3d:  ### If project 3D model to 2D image
+            mask = show_mask(im, r, t, camera_matrix, dist_coefs, pts_3d)
+        else:           ### If load 2D mask
+            mask_path = data_path+'mask/{}{}'.format(img_idx,img_format)
+            mask = cv2.imread(mask_path)
+
         im = show_axis(im, r, t, camera_matrix, dist_coefs, 6,False)      
 
-        blend = show_blend_mask(im, mask)
+
+        blend = show_blend_mask(im, mask, 0.5)
 
         cv2.imshow('Estimated Pose', im)
         cv2.waitKey(0)  
@@ -104,16 +110,19 @@ def vis(data_path,config,camera_matrix,dist_coefs,img_format='.png',set_x0=False
 
         
 if __name__ == '__main__':
-    # root_path = 'F:/micc_challenge/'
-
-    subset_name = 'MBF'
+    subset_name = 'LND'
 
     data_path = './{}/TRAIN/'.format(subset_name)
+    # data_path = './{}/sample_TEST/'.format(subset_name)
     skip_path = data_path+'config.yaml'
+    print(skip_path)
 
     with open(skip_path) as f_tmp:
         config =  yaml.load(f_tmp, Loader=yaml.FullLoader)
     camera_matrix = np.array(config['cam']['camera_matrix']['data']).reshape((3,3))
-    dist_coefs = np.array(config['cam']['dist_coeff']['data'])
+    if config['cam']['dist_coeff'] is not None:
+        dist_coefs = np.array(config['cam']['dist_coeff']['data'])
+    else:
+        dist_coefs = None
 
-    vis(data_path,config['dataset'],camera_matrix,dist_coefs)
+    vis(data_path,config['dataset'],camera_matrix,dist_coefs,project_3d=False)
