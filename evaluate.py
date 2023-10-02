@@ -230,5 +230,5 @@ class Evaluator:
         self.rot_error = []
         results = {'proj2d': proj2d, 'add': add,'add-s': adds, 'ADD-distance': add_dist, 'ADDS-distance': adds_dist, 'cmd5': cmd5, 'trans_error': trans_error, 'rot_error':rot_error}
         if save_path is not None:
-            np.save(save_path+'/results.npy',results)
+            np.save(save_path,results)
         return {'proj2d': proj2d, 'add': add, 'add-s': adds, 'ADD-distance': add_dist, 'ADDS-distance': adds_dist, 'cmd5': cmd5, 'trans_error': trans_error, 'rot_error':rot_error}
