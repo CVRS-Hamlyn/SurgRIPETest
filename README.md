@@ -30,11 +30,12 @@ The model input is an RGB image and the required output should be a **4 X 3** ma
 ### Usage
 
 ```bash
-usage: python run.py [--path] [--type]
+usage: python run.py [--path] [--type] [--spath]
 
 positional arguments:
 Path                The path to root of the dataset
 Type                The type of task l (LND) | m (MBF)
+spath               The save path for results
 ```
 
 ## evaluate.py
