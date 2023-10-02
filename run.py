@@ -22,6 +22,7 @@ def get_args():
     parser = argparse.ArgumentParser(description='Evaluateion script for SurgRIPE.')
     parser.add_argument('--path', help= 'Get path to data root path.')
     parser.add_argument('--type', choices=TASK_CHOICES.keys(), default='l', help= 'Instrument Type for test.')
+    parser.add_argument('--spath', help= 'Get save path of results.')
     return parser.parse_args()
 
 def main():
@@ -44,7 +45,7 @@ def main():
 
         evaluator.evaluate(pose_gt, pose_pred)
 
-    evaluator.summarize()
+    evaluator.summarize(args.spath)
 
 
 if __name__ == "__main__":
