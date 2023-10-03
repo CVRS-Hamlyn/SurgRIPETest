@@ -207,6 +207,7 @@ class Evaluator:
     def summarize(self,save_path=None):
         proj2d = np.mean(self.proj2d)
         add = np.mean(self.add)
+        add_dists = self.add_dist
         add_dist = np.mean(self.add_dist)
         adds = np.mean(self.adds)
         adds_dist = np.mean(self.adds_dist)
@@ -228,7 +229,7 @@ class Evaluator:
         self.icp_add = []
         self.trans_error = []
         self.rot_error = []
-        results = {'proj2d': proj2d, 'add': add,'add-s': adds, 'ADD-distance': add_dist, 'ADDS-distance': adds_dist, 'cmd5': cmd5, 'trans_error': trans_error, 'rot_error':rot_error}
+        results = {'proj2d': proj2d, 'add': add,'add-s': adds, 'ADD-distance': add_dist, 'ADD-distance list': add_dists, 'ADDS-distance': adds_dist, 'cmd5': cmd5, 'trans_error': trans_error, 'rot_error':rot_error}
         if save_path is not None:
             np.save(save_path,results)
         return {'proj2d': proj2d, 'add': add, 'add-s': adds, 'ADD-distance': add_dist, 'ADDS-distance': adds_dist, 'cmd5': cmd5, 'trans_error': trans_error, 'rot_error':rot_error}
