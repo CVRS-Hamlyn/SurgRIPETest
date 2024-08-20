@@ -131,7 +131,7 @@ def get_camparams(instrument_type):
 
 class Evaluator:
 
-    def __init__(self, root_path, instrument_type):
+    def __init__(self, root_path, instrument_type, is_save_pose=True):
         # self.result_dir = result_dir
         self.model_path = os.path.join(root_path,'joint.npy')
         self.model = np.load(self.model_path)
@@ -147,7 +147,15 @@ class Evaluator:
         self.rot_error = []
         self.adds = []
         self.adds_dist = []
-
+        ###
+        self.is_save_pose = is_save_pose
+        if self.is_save_pose:
+            self.pred_list = []
+            self.gt_list = []
+    
+    def save_pose(self, pose_pred, pose_targets):
+        self.pred_list.append(pose_pred)
+        self.gt_list.append(pose_targets)
 
     def trans_rot_error(self, pose_pred, pose_targets):
         gt_pose_rot = pose_targets[:3,:3]
@@ -203,6 +211,8 @@ class Evaluator:
         self.add_metric(pose_pred, pose_gt)
         self.mm_degree_5_metric(pose_pred, pose_gt)
         self.trans_rot_error(pose_pred, pose_gt)
+        if self.is_save_pose:
+            self.save_pose(pose_pred, pose_gt)
 
     def summarize(self,save_path=None):
         proj2d = np.mean(self.proj2d)
@@ -230,6 +240,9 @@ class Evaluator:
         self.trans_error = []
         self.rot_error = []
         results = {'proj2d': proj2d, 'add': add,'add-s': adds, 'ADD-distance': add_dist, 'ADD-distance list': add_dists, 'ADDS-distance': adds_dist, 'cmd5': cmd5, 'trans_error': trans_error, 'rot_error':rot_error}
+        if self.is_save_pose:
+            results['pred_list'] = self.pred_list
+            results['gt_list'] = self.gt_list
         if save_path is not None:
             np.save(save_path,results)
         return {'proj2d': proj2d, 'add': add, 'add-s': adds, 'ADD-distance': add_dist, 'ADDS-distance': adds_dist, 'cmd5': cmd5, 'trans_error': trans_error, 'rot_error':rot_error}
